@@ -1,32 +1,22 @@
 package cornipickleplugin;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
-import java.net.URL;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.crawljax.browser.EmbeddedBrowser.BrowserType;
-import com.crawljax.core.CrawlerContext;
 import com.crawljax.core.CrawljaxRunner;
 import com.crawljax.core.configuration.BrowserConfiguration;
 import com.crawljax.core.configuration.CrawljaxConfiguration;
 import com.crawljax.core.configuration.InputSpecification;
 import com.crawljax.core.plugin.HostInterfaceImpl;
-import com.crawljax.core.plugin.OnNewStatePlugin;
 import com.crawljax.core.plugin.descriptor.Parameter;
 import com.crawljax.core.plugin.descriptor.PluginDescriptor;
-import com.crawljax.core.state.StateVertex;
 
 import ca.uqac.lif.cornipickle.CornipickleParser.ParseException;
-import ca.uqac.lif.cornipickle.util.PackageFileReader;
 
 /**
  * Use the sample plugin in combination with Crawljax.

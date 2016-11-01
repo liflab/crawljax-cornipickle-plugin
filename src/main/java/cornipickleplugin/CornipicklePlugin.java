@@ -1,15 +1,12 @@
 package cornipickleplugin;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import com.crawljax.core.CandidateElement;
 import com.crawljax.core.CrawlerContext;
 import com.crawljax.core.plugin.GeneratesOutput;
 import com.crawljax.core.plugin.HostInterface;
@@ -18,7 +15,6 @@ import com.crawljax.core.plugin.OnNewStatePlugin;
 import com.crawljax.core.state.CrawlPath;
 import com.crawljax.core.state.Identification;
 import com.crawljax.core.state.StateVertex;
-import com.google.common.collect.ImmutableList;
 
 import ca.uqac.lif.cornipickle.CornipickleParser.ParseException;
 import ca.uqac.lif.cornipickle.Interpreter;
