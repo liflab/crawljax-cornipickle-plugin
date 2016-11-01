@@ -1,8 +1,14 @@
 package cornipickleplugin;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.net.URL;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,12 +25,15 @@ import com.crawljax.core.plugin.descriptor.Parameter;
 import com.crawljax.core.plugin.descriptor.PluginDescriptor;
 import com.crawljax.core.state.StateVertex;
 
+import ca.uqac.lif.cornipickle.CornipickleParser.ParseException;
+import ca.uqac.lif.cornipickle.util.PackageFileReader;
+
 /**
  * Use the sample plugin in combination with Crawljax.
  */
 public class Runner {
 
-	private static final String URL = "http://www.apple.com";
+	private static final String URL = "http://localhost:10101/examples/misaligned-elements.html";
 	private static final int MAX_DEPTH = 2;
 	private static final int MAX_NUMBER_STATES = 8;
 	private static final Logger LOG = LoggerFactory.getLogger(Runner.class);
@@ -51,14 +60,27 @@ public class Runner {
 		PluginDescriptor descriptor = PluginDescriptor.forPlugin(CornipicklePlugin.class);
 		Map<String, String> parameters = new HashMap<>();
 		for(Parameter parameter : descriptor.getParameters()) {
-			parameters.put(parameter.getId(), "value");
+			if(parameter.getId().equals("properties")) {
+				//Put here the path to a .cp file containing your Cornipickle properties
+				parameters.put(parameter.getId(), "/home/fguerin/Documents/crawljax-cornipickle-plugin/properties.cp");
+			}
+			else {
+				parameters.put(parameter.getId(), "value");
+			}
 		}
-		builder.addPlugin(new CornipicklePlugin(new HostInterfaceImpl(new File("out"), parameters))); 
+		CornipicklePlugin plugin;
+		try {
+			plugin = new CornipicklePlugin(new HostInterfaceImpl(new File("out"), parameters));
+			builder.addPlugin(plugin); 
 
-		builder.crawlRules().setInputSpec(getInputSpecification());
+			builder.crawlRules().setInputSpec(getInputSpecification());
 
-		CrawljaxRunner crawljax = new CrawljaxRunner(builder.build());
-		crawljax.call();
+			CrawljaxRunner crawljax = new CrawljaxRunner(builder.build());
+			crawljax.call();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private static InputSpecification getInputSpecification() {

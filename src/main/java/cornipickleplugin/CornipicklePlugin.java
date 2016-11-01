@@ -1,13 +1,19 @@
 package cornipickleplugin;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.crawljax.core.CandidateElement;
 import com.crawljax.core.CrawlerContext;
 import com.crawljax.core.plugin.GeneratesOutput;
 import com.crawljax.core.plugin.HostInterface;
+import com.crawljax.core.plugin.HostInterfaceImpl;
 import com.crawljax.core.plugin.OnNewStatePlugin;
 import com.crawljax.core.state.CrawlPath;
 import com.crawljax.core.state.Identification;
@@ -40,15 +46,43 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 	
 	private Set<String> m_tagNames;
 	
+	private enum Include {INCLUDE, DONT_INCLUDE, DONT_INCLUDE_RECURSIVE};
+	
 	private static final Logger LOG = LoggerFactory.getLogger(CornipicklePlugin.class);
-
+	
+	/**
+	 * Constructor for the plugin
+	 */
+	public CornipicklePlugin() {
+		this.m_hostInterface = new HostInterfaceImpl(null, null);
+		this.m_outputFolder = "";
+		this.m_corniInterpreter = new Interpreter();
+	}
+	
 	/**
 	 * Constructor for the plugin
 	 * @param hostInterface
+	 * @throws ParseException 
 	 */
-	public CornipicklePlugin(HostInterface hostInterface) {
+	public CornipicklePlugin(HostInterface hostInterface) throws ParseException {
 		this.m_hostInterface = hostInterface;
 		this.m_outputFolder = hostInterface.getOutputDirectory().getAbsolutePath();
+		this.m_corniInterpreter = new Interpreter();
+		
+		try {
+			FileInputStream fis = new FileInputStream(this.m_hostInterface.getParameters().get("properties"));
+			BufferedReader bf = new BufferedReader(new InputStreamReader(fis));
+			String inputLine;
+			String properties = "";
+	        while ((inputLine = bf.readLine()) != null) {
+	        	properties = properties + inputLine + "\n";
+	        }
+	        setProperties(properties);
+	        bf.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/* 
@@ -72,21 +106,12 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 	 * @param properties  a string of containing Cornipickle code
 	 * @return  true if it parsed successfully, false otherwise
 	 */
-	public boolean setProperties(String properties) {
-		boolean success = true;
-		try {
-			this.m_corniInterpreter.clear();
-			this.m_corniInterpreter.parseProperties(properties);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			success = false;
-		}
+	public void setProperties(String properties) throws ParseException {
+		this.m_corniInterpreter.clear();
+		this.m_corniInterpreter.parseProperties(properties);
 		
 		this.m_attributes = m_corniInterpreter.getAttributes();
 		this.m_tagNames = m_corniInterpreter.getTagNames();
-		
-		return success;
 	}
 
 	@Override
@@ -111,5 +136,33 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 		
 		
 		return out;
+	}
+	
+	private Include includeInResult(WebElement node) {
+		if(node.getTagName().equals("")) {
+			if(node.getAttribute("value").trim() == "") {
+				return Include.DONT_INCLUDE_RECURSIVE;
+			}
+			else {
+				return Include.INCLUDE;
+			}
+		}
+		
+		for(String tag : this.m_tagNames) {
+			if(matchesSelector(node,tag)) {
+				return Include.INCLUDE;
+			}
+		}
+		
+		return Include.DONT_INCLUDE;
+	}
+	
+	private boolean matchesSelector(WebElement node, String selector) {
+		String[] mat = Pattern.compile("([\\w\\d]+){0,1}(\\.([\\w\\d]+)){0,1}(#([\\w\\d]+)){0,1}").split(selector);
+		String tag_name = mat[1];
+		String class_name = mat[3];
+		String id_name = mat[5];
+	
+		return false;
 	}
 }
