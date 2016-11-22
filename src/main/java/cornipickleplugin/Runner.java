@@ -35,7 +35,7 @@ public class Runner {
 		CrawljaxConfiguration.CrawljaxConfigurationBuilder builder = CrawljaxConfiguration.builderFor(URL);
 		builder.crawlRules().insertRandomDataInInputForms(false);
 		
-		builder.setBrowserConfig(new BrowserConfiguration(BrowserType.PHANTOMJS));
+		builder.setBrowserConfig(new BrowserConfiguration(BrowserType.CHROME));
 
 		builder.crawlRules().click("a");
 
