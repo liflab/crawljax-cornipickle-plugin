@@ -60,7 +60,7 @@ public class Runner {
 		}
 		CornipicklePlugin plugin;
 		try {
-			plugin = new CornipicklePlugin(new HostInterfaceImpl(new File("out"), parameters));
+			plugin = new CornipicklePlugin(new HostInterfaceImpl(new File("out.txt"), parameters));
 			builder.addPlugin(plugin); 
 
 			builder.crawlRules().setInputSpec(getInputSpecification());

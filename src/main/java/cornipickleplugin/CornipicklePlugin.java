@@ -2,14 +2,17 @@ package cornipickleplugin;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.crawljax.core.CrawlerContext;
+import com.crawljax.core.CrawljaxException;
 import com.crawljax.core.plugin.GeneratesOutput;
 import com.crawljax.core.plugin.HostInterface;
 import com.crawljax.core.plugin.HostInterfaceImpl;
@@ -21,11 +24,14 @@ import com.crawljax.core.state.StateVertex;
 
 import ca.uqac.lif.cornipickle.CornipickleParser.ParseException;
 import ca.uqac.lif.cornipickle.Interpreter;
+import ca.uqac.lif.cornipickle.Interpreter.StatementMetadata;
+import ca.uqac.lif.cornipickle.Verdict;
 import ca.uqac.lif.json.JsonElement;
 import ca.uqac.lif.json.JsonList;
 import ca.uqac.lif.json.JsonMap;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
@@ -97,7 +103,23 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 	public void onNewState(CrawlerContext context, StateVertex newState) {
 		WebElement initialNode = context.getBrowser().getWebElement(new Identification(Identification.How.tag,"body"));
 		JsonElement content = serializePage(initialNode,context);
-		LOG.debug(content.toString());
+		this.m_corniInterpreter.evaluateAll(content);
+		Map<StatementMetadata, Verdict> verdicts = this.m_corniInterpreter.getVerdicts();
+		try {
+			FileWriter fw = new FileWriter(context.getConfig().getOutputDir(), true);
+			fw.write("<br>State " + String.valueOf(newState.getId() + "</br>\n\n"));
+			fw.write("URL:\n" + newState.getUrl() + "\n\n");
+			for(Map.Entry<StatementMetadata, Verdict> statement : verdicts.entrySet()) {
+				fw.write("Statement:\n" + statement.getKey().toString() + "\n\n");
+				fw.write("Verdict:\n" + statement.getValue().getValue().toString() + "\n\n");
+				fw.write("Witness:\n" + statement.getValue().getWitnessFalse().toString() + "\n\n");
+				fw.write("----------------------------------------------------------------------------\n\n");
+			}
+			fw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -124,7 +146,7 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 	}
 	
 	private JsonElement serializePage(WebElement node, CrawlerContext context) {
-		JsonElement content = serializePageContent(node, context);
+		JsonElement content = serializePageContent(node, context, "//html[1]/body");
 		content = serializeWindow(content, context);
 		return content;
 	}
@@ -135,15 +157,22 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 	 * @param event  event that triggered the new state
 	 * @return the serialized page
 	 */
-	private JsonElement serializePageContent(WebElement node, CrawlerContext context) {
+	private JsonElement serializePageContent(WebElement node, CrawlerContext context, String path) {
 		JsonMap out = new JsonMap();
 		
 		WebElement target = null;
+		
+		if(!(node.equals(context.getBrowser().getWebElement(new Identification(Identification.How.xpath,path))))) {
+			throw new CrawljaxException("The xpath " + path +  " doesn't match the current node in CornipicklePlugin");
+		}
 		
 		try {
 			target = context.getBrowser().getWebElement(context.getCrawlPath().last().getIdentification());
 		}
 		catch(NullPointerException e) {
+			target = null;
+		}
+		catch(NoSuchElementException e) {
 			target = null;
 		}
 		
@@ -167,18 +196,17 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 				out = isDefined("id") ? add(out, "id", node.getAttribute("id")) : out;
 				out = isDefined("height") ? add(out, "height", node.getAttribute("clientHeight")) : out;
 				out = isDefined("width") ? add(out, "width", node.getAttribute("clientWidth")) : out;
-				out = isDefined("background") ? add(out, "background", node.getCssValue("background-color").trim()) : out;
-				out = isDefined("background") ? add(out, "background", node.getCssValue("background-color").trim()) : out;
-				out = isDefined("color") ? add(out, "color", node.getCssValue("color")) : out;
-				out = isDefined("border") ? add(out, "border", formatBorderString(node)) : out;
-				out = isDefined("top") ? add(out, "top", node.getCssValue("top")) : out;
-				out = isDefined("left") ? add(out, "left", node.getCssValue("left")) : out;
+				out = isDefined("background") ? add(out, "background", getComputedValue(context,path,"background-color").trim()) : out;
+				out = isDefined("color") ? add(out, "color", getComputedValue(context,path,"color")) : out;
+				out = isDefined("border") ? add(out, "border", formatBorderString(context,path,node)) : out;
+				out = isDefined("top") ? add(out, "top", String.valueOf(pos.getY())) : out;
+				out = isDefined("left") ? add(out, "left", String.valueOf(pos.getX())) : out;
 				out = isDefined("bottom") ? add(out, "bottom", add_dimensions(new String[]{String.valueOf(pos.getY()),node.getAttribute("clientHeight")})) : out;
 				out = isDefined("right") ? add(out, "right", add_dimensions(new String[]{String.valueOf(pos.getX()),node.getAttribute("clientWidth")})) : out;
-				out = isDefined("display") ? add(out, "display", node.getCssValue("display")) : out;
+				out = isDefined("display") ? add(out, "display", getComputedValue(context,path,"display")) : out;
 				out = isDefined("size") ? add(out, "size", node.getAttribute("size")) : out;
-				out = isDefined("checked") ? add(out, "checked", node.getAttribute("checked")) : out;
-				out = isDefined("disabled") ? add(out, "disabled", node.getAttribute("disabled")) : out;
+				out = isDefined("checked") ? add(out, "checked", String.valueOf(node.isSelected())) : out;
+				out = isDefined("disabled") ? add(out, "disabled", String.valueOf(!node.isEnabled())) : out;
 				out = isDefined("accesskey") ? add(out, "accesskey", node.getAttribute("accesskey")) : out;
 				out = isDefined("min") ? add(out, "min", node.getAttribute("min")) : out;
 				
@@ -211,13 +239,16 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 		if(includeInResult(node) != Include.DONT_INCLUDE_RECURSIVE) {
 			JsonList in_children = new JsonList();
 			String text = node.getAttribute("textContent").replace(System.getProperty("line.separator"), "").trim();
+			int childNumber = 0;
 			for(WebElement child : node.findElements(new By.ByXPath("*"))) {
+				childNumber++;
 				String childContent = child.getAttribute("textContent").replace(System.getProperty("line.separator"), "").trim();
 				int firstIndex = text.indexOf(childContent);
 				String before = text.substring(0,firstIndex);
 				String after = text.substring(firstIndex+childContent.length());
 				text = before.concat(after);
-				JsonElement new_child = serializePageContent(child, context);
+				String newPath = path.concat("/*[" + String.valueOf(childNumber) + "]");
+				JsonElement new_child = serializePageContent(child, context, newPath);
 				if(!is_empty(new_child)) {
 					in_children.add(new_child);
 				}
@@ -240,20 +271,20 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 		JsonMap window = new JsonMap();
 		window.put("tagname", "window");
 		window.put("URL", (String) context.getBrowser().executeJavaScript(
-				"window.location.host + window.location.pathname"));
-		window.put("aspect-ratio", (String) context.getBrowser().executeJavaScript(
-				"window.document.documentElement.clientWidth / window.document.documentElement.clientHeight"));
+				"return window.location.host + window.location.pathname;"));
+		window.put("aspect-ratio", String.valueOf((Double)context.getBrowser().executeJavaScript(
+				"return window.document.documentElement.clientWidth / window.document.documentElement.clientHeight;")));
 		window.put("orientation", getOrientation(context));
-		window.put("width", (String) context.getBrowser().executeJavaScript(
-				"window.document.documentElement.clientWidth"));
-		window.put("height", (String) context.getBrowser().executeJavaScript(
-				"window.document.documentElement.clientHeight"));
-		window.put("device-width", (String) context.getBrowser().executeJavaScript(
-				"window.screen.availWidth"));
-		window.put("device-height", (String) context.getBrowser().executeJavaScript(
-				"window.screen.availHeight"));
-		window.put("device-aspect-ratio", (String) context.getBrowser().executeJavaScript(
-				"window.screen.availWidth / window.screen.availHeight"));
+		window.put("width", String.valueOf((Long)context.getBrowser().executeJavaScript(
+				"return window.document.documentElement.clientWidth;")));
+		window.put("height", String.valueOf((Long)context.getBrowser().executeJavaScript(
+				"return window.document.documentElement.clientHeight;")));
+		window.put("device-width", String.valueOf((Long)context.getBrowser().executeJavaScript(
+				"return window.screen.availWidth;")));
+		window.put("device-height", String.valueOf((Long)context.getBrowser().executeJavaScript(
+				"return window.screen.availHeight;")));
+		window.put("device-aspect-ratio", String.valueOf((Double)context.getBrowser().executeJavaScript(
+				"return window.screen.availWidth / window.screen.availHeight;")));
 		window.put("mediaqueries", serializeMediaQueries(context));
 		
 		JsonList children = new JsonList();
@@ -283,7 +314,7 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 			if(indexOfUnderscore != -1) {
 				id = att.substring(0,indexOfUnderscore);
 				query = att.substring(indexOfUnderscore + 1);
-				if(((String)context.getBrowser().executeJavaScript("window.matchMedia(\"" + query + "\").matches")).equals("true")) {
+				if((boolean)context.getBrowser().executeJavaScript("return window.matchMedia(\"" + query + "\").matches;")) {
 					out.put(id, "true");
 				}
 				else {
@@ -395,10 +426,10 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 		return true;
 	}
 	
-	private String formatBorderString(WebElement node) {
-		String s_top_style = node.getCssValue("border-top-style");
-		String s_top_colour = node.getCssValue("border-top-color");
-		String s_top_width = node.getCssValue("border-top-width");
+	private String formatBorderString(CrawlerContext context, String path, WebElement node) {
+		String s_top_style = getComputedValue(context,path,"border-top-style");
+		String s_top_colour = getComputedValue(context,path,"border-top-color");
+		String s_top_width = getComputedValue(context,path,"border-top-width");
 		String out = s_top_style + " " + s_top_colour + " " + s_top_width;
 		return out.trim();
 	}
@@ -414,7 +445,7 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 	}
 	
 	private String getOrientation(CrawlerContext context) {
-		return (String) context.getBrowser().executeJavaScript("switch(window.orientation)" +
+		return (String)context.getBrowser().executeJavaScript("switch(window.orientation)" +
 	    "{" +
 	      "case -90:" +
 	      "case 90:" +
@@ -422,5 +453,27 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 	      "default:" +
 	        "return \"portrait\";" +
 	    "};");
+	}
+	
+	private String getComputedValue(CrawlerContext context, String path, String attribute) {
+		return (String) context.getBrowser().executeJavaScript(
+				"var elem = document.evaluate(\"" + path + "\", document, null, 9, null).singleNodeValue;" +
+				"var res = null;" +
+				"if(elem.currentStyle)" +
+				"{" +
+				"	res = elem.currentStyle[\"" + attribute + "\"];" +
+				"}" +
+				"else if(window.getComputedStyle)" +
+				"{" +
+				"	if(window.getComputedStyle.getPropertyValue)" +
+				"	{" +
+				"		res = window.getComputedStyle(elem,null).getPropertyValue(\"" + attribute + "\");" +
+				"	}" +
+				"	else" +
+				"	{" +
+				"		res = window.getComputedStyle(elem)[\"" + attribute + "\"];" +
+				"	}" +
+				"}" +
+				"return res");
 	}
 }

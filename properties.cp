@@ -9,6 +9,14 @@ We say that $x and $y are top-aligned when (
   $x's top equals $y's top
 ).
 
+We say that the page is big when (
+  The media query "(min-width: 200px)" applies
+).
+
+The following rules apply when (
+	the page is big
+).
+
 # We then express the fact that all menu items are either
 # left- or top-aligned.
 
