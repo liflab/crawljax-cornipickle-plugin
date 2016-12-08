@@ -23,7 +23,7 @@ import ca.uqac.lif.cornipickle.CornipickleParser.ParseException;
  */
 public class Runner {
 
-	private static final String URL = "http://localhost:10101/examples/misaligned-elements.html";
+	private static final String URL = "http://xkcd.com/";
 	private static final int MAX_DEPTH = 2;
 	private static final int MAX_NUMBER_STATES = 8;
 	private static final Logger LOG = LoggerFactory.getLogger(Runner.class);

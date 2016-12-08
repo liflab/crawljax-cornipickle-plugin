@@ -17,7 +17,9 @@ import com.crawljax.core.plugin.GeneratesOutput;
 import com.crawljax.core.plugin.HostInterface;
 import com.crawljax.core.plugin.HostInterfaceImpl;
 import com.crawljax.core.plugin.OnNewStatePlugin;
+import com.crawljax.core.plugin.OnRevisitStatePlugin;
 import com.crawljax.core.state.CrawlPath;
+import com.crawljax.core.state.Eventable;
 import com.crawljax.core.state.Eventable.EventType;
 import com.crawljax.core.state.Identification;
 import com.crawljax.core.state.StateVertex;
@@ -42,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * @author fguerin
  *
  */
-public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
+public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin, GeneratesOutput {
 	private HostInterface m_hostInterface;
 	
 	private String m_outputFolder;
@@ -54,6 +56,8 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 	private Set<String> m_tagNames;
 	
 	private int m_cornipickleIdCounter = 0;
+
+	private Object m_interprete;
 	
 	private enum Include {INCLUDE, DONT_INCLUDE, DONT_INCLUDE_RECURSIVE};
 	
@@ -93,6 +97,13 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		try {
+			FileWriter fw = new FileWriter(hostInterface.getOutputDirectory(), false);
+			fw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/* 
@@ -101,14 +112,64 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 	 */
 	@Override
 	public void onNewState(CrawlerContext context, StateVertex newState) {
+		double begin = (double)System.currentTimeMillis();
+		
 		WebElement initialNode = context.getBrowser().getWebElement(new Identification(Identification.How.tag,"body"));
 		JsonElement content = serializePage(initialNode,context);
 		this.m_corniInterpreter.evaluateAll(content);
 		Map<StatementMetadata, Verdict> verdicts = this.m_corniInterpreter.getVerdicts();
+		
+		double end = (double)System.currentTimeMillis();
+		double difference = (end - begin) / 1000 / 60;
+		
 		try {
-			FileWriter fw = new FileWriter(context.getConfig().getOutputDir(), true);
-			fw.write("<br>State " + String.valueOf(newState.getId() + "</br>\n\n"));
+			FileWriter fw = new FileWriter(this.m_hostInterface.getOutputDirectory(), true);
+			fw.write("<br>New State " + String.valueOf(newState.getId() + "</br>\n\n"));
 			fw.write("URL:\n" + newState.getUrl() + "\n\n");
+			fw.write("Path: " + getStatePath(context) + "\n\n");
+			fw.write("Time taken: " + String.valueOf(difference) + " minutes \n\n");
+			for(Map.Entry<StatementMetadata, Verdict> statement : verdicts.entrySet()) {
+				fw.write("Statement:\n" + statement.getKey().toString() + "\n\n");
+				fw.write("Verdict:\n" + statement.getValue().getValue().toString() + "\n\n");
+				fw.write("Witness:\n" + statement.getValue().getWitnessFalse().toString() + "\n\n");
+			}
+			fw.write("JSON: \n" + content.toString() + "\n\n");
+			fw.write("----------------------------------------------------------------------------\n\n");
+			fw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/*
+	 * Function executed everytime a state is revisited (happens when backtracking too).
+	 * @see com.crawljax.core.plugin.OnRevisitStatePlugin#onRevisitState(com.crawljax.core.CrawlerContext, com.crawljax.core.state.StateVertex)
+	 */
+	@Override
+	public void onRevisitState(CrawlerContext context, StateVertex currentState) {
+		try {
+			context.getCrawlPath();
+		} catch (NullPointerException e) {
+			this.m_corniInterpreter.resetHistory();
+		}
+		
+		double begin = (double)System.currentTimeMillis();
+		
+		WebElement initialNode = context.getBrowser().getWebElement(new Identification(Identification.How.tag,"body"));
+		JsonElement content = serializePage(initialNode,context);
+		this.m_corniInterpreter.evaluateAll(content);
+		Map<StatementMetadata, Verdict> verdicts = this.m_corniInterpreter.getVerdicts();
+		
+		double end = (double)System.currentTimeMillis();
+		double difference = (end - begin) / 1000 / 60;
+		
+		try {
+			FileWriter fw = new FileWriter(this.m_hostInterface.getOutputDirectory(), true);
+			fw.write("<br>Revisit State " + String.valueOf(currentState.getId() + "</br>\n\n"));
+			fw.write("URL:\n" + currentState.getUrl() + "\n\n");
+			fw.write("Path: " + getStatePath(context) + "\n\n");
+			fw.write("Time taken: " + String.valueOf(difference) + " minutes \n\n");
 			for(Map.Entry<StatementMetadata, Verdict> statement : verdicts.entrySet()) {
 				fw.write("Statement:\n" + statement.getKey().toString() + "\n\n");
 				fw.write("Verdict:\n" + statement.getValue().getValue().toString() + "\n\n");
@@ -475,5 +536,19 @@ public class CornipicklePlugin implements OnNewStatePlugin, GeneratesOutput {
 				"	}" +
 				"}" +
 				"return res");
+	}
+	
+	private String getStatePath(CrawlerContext context) {
+		String ret = "";
+		try {
+			for(Eventable event : context.getCrawlPath()) {
+				ret = ret + event.getSourceStateVertex().getName() + " -> ";
+			}
+			ret = ret + context.getCrawlPath().last().getTargetStateVertex().getName();
+		} catch (NullPointerException e) {
+			ret = ret + "index";
+		}
+		
+		return ret;
 	}
 }
