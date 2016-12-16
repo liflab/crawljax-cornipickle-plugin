@@ -18,19 +18,13 @@ import com.crawljax.core.plugin.descriptor.PluginDescriptor;
 
 import ca.uqac.lif.cornipickle.CornipickleParser.ParseException;
 
-/**
- * Use the sample plugin in combination with Crawljax.
- */
-public class Runner {
+public class BeepStoreRunner {
 
-	private static final String URL = "http://www.xkcd.com";
+	private static final String URL = "http://localhost/beepstore";
 	private static final int MAX_DEPTH = 2;
 	private static final int MAX_NUMBER_STATES = 8;
 	private static final Logger LOG = LoggerFactory.getLogger(Runner.class);
-
-	/**
-	 * Entry point
-	 */
+	
 	public static void main(String[] args) {
 		CrawljaxConfiguration.CrawljaxConfigurationBuilder builder = CrawljaxConfiguration.builderFor(URL);
 		builder.crawlRules().insertRandomDataInInputForms(false);
@@ -38,6 +32,8 @@ public class Runner {
 		builder.setBrowserConfig(new BrowserConfiguration(BrowserType.CHROME));
 
 		builder.crawlRules().click("a");
+		builder.crawlRules().click("button");
+		builder.crawlRules().clickOnce(true).click("input").withAttribute("id", "fault-leave-login-link");
 
 		// except these
 		builder.crawlRules().dontClick("a").underXPath("//DIV[@id='guser']");
@@ -79,7 +75,8 @@ public class Runner {
 		return input;
 	}
 
-	private Runner() {
+	private BeepStoreRunner() {
 		// Utility class
 	}
+
 }

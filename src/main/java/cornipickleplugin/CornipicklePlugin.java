@@ -2,8 +2,11 @@ package cornipickleplugin;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +21,6 @@ import com.crawljax.core.plugin.HostInterface;
 import com.crawljax.core.plugin.HostInterfaceImpl;
 import com.crawljax.core.plugin.OnNewStatePlugin;
 import com.crawljax.core.plugin.OnRevisitStatePlugin;
-import com.crawljax.core.state.CrawlPath;
 import com.crawljax.core.state.Eventable;
 import com.crawljax.core.state.Eventable.EventType;
 import com.crawljax.core.state.Identification;
@@ -31,6 +33,8 @@ import ca.uqac.lif.cornipickle.Verdict;
 import ca.uqac.lif.json.JsonElement;
 import ca.uqac.lif.json.JsonList;
 import ca.uqac.lif.json.JsonMap;
+import ca.uqac.lif.json.JsonParser;
+import ca.uqac.lif.json.JsonParser.JsonParseException;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
@@ -56,8 +60,6 @@ public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin
 	private Set<String> m_tagNames;
 	
 	private int m_cornipickleIdCounter = 0;
-
-	private Object m_interprete;
 	
 	private enum Include {INCLUDE, DONT_INCLUDE, DONT_INCLUDE_RECURSIVE};
 	
@@ -106,17 +108,47 @@ public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin
 		}
 	}
 	
-	/* 
-	 * Function executed everytime a new state is found
-	 * @see com.crawljax.core.plugin.OnNewStatePlugin#onNewState(com.crawljax.core.CrawlerContext, com.crawljax.core.state.StateVertex)
-	 */
 	@Override
 	public void onNewState(CrawlerContext context, StateVertex newState) {
 		double begin = (double)System.currentTimeMillis();
 		
-		WebElement initialNode = context.getBrowser().getWebElement(new Identification(Identification.How.tag,"body"));
-		JsonElement content = serializePage(initialNode,context);
-		this.m_corniInterpreter.evaluateAll(content);
+		String script = readJS();
+		
+		StringBuilder attribute_string = new StringBuilder();
+		for (String att : this.m_attributes)
+		{
+			attribute_string.append("\"").append(att).append("\",");
+		}
+		
+		StringBuilder tag_string = new StringBuilder();
+		for (String tag : this.m_tagNames)
+		{
+			tag_string.append("\"").append(tag).append("\",");
+		}
+		
+		script = script.replace("%%ATTRIBUTELIST%%", attribute_string);
+		script = script.replace("%%TAGLIST%%", tag_string);
+		
+		String path;
+		try {
+			path = context.getCrawlPath().last().getIdentification().getValue();
+			script = script.replace("%%PATH%%", path);
+			script = script.replace("%%BOOL%%", "true");
+		}
+		catch(Exception e) {
+			script = script.replace("%%BOOL%%", "false");
+		}
+		
+		String content = (String)context.getBrowser().executeJavaScript(script);
+		JsonElement j;
+		try {
+			j = new JsonParser().parse(content);
+			this.m_corniInterpreter.evaluateAll(j);
+		} catch (JsonParseException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 		Map<StatementMetadata, Verdict> verdicts = this.m_corniInterpreter.getVerdicts();
 		
 		double end = (double)System.currentTimeMillis();
@@ -156,9 +188,43 @@ public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin
 		
 		double begin = (double)System.currentTimeMillis();
 		
-		WebElement initialNode = context.getBrowser().getWebElement(new Identification(Identification.How.tag,"body"));
-		JsonElement content = serializePage(initialNode,context);
-		this.m_corniInterpreter.evaluateAll(content);
+		String script = readJS();
+		
+		StringBuilder attribute_string = new StringBuilder();
+		for (String att : this.m_attributes)
+		{
+			attribute_string.append("\"").append(att).append("\",");
+		}
+		
+		StringBuilder tag_string = new StringBuilder();
+		for (String tag : this.m_tagNames)
+		{
+			tag_string.append("\"").append(tag).append("\",");
+		}
+		
+		script = script.replace("%%ATTRIBUTELIST%%", attribute_string);
+		script = script.replace("%%TAGLIST%%", tag_string);
+		
+		String path;
+		try {
+			path = context.getCrawlPath().last().getIdentification().getValue();
+			script = script.replace("%%PATH%%", path);
+			script = script.replace("%%BOOL%%", "true");
+		}
+		catch(Exception e) {
+			script = script.replace("%%BOOL%%", "false");
+		}
+		
+		String content = (String)context.getBrowser().executeJavaScript(script);
+		JsonElement j;
+		try {
+			j = new JsonParser().parse(content);
+			this.m_corniInterpreter.evaluateAll(j);
+		} catch (JsonParseException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 		Map<StatementMetadata, Verdict> verdicts = this.m_corniInterpreter.getVerdicts();
 		
 		double end = (double)System.currentTimeMillis();
@@ -174,8 +240,9 @@ public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin
 				fw.write("Statement:\n" + statement.getKey().toString() + "\n\n");
 				fw.write("Verdict:\n" + statement.getValue().getValue().toString() + "\n\n");
 				fw.write("Witness:\n" + statement.getValue().getWitnessFalse().toString() + "\n\n");
-				fw.write("----------------------------------------------------------------------------\n\n");
 			}
+			fw.write("JSON: \n" + content.toString() + "\n\n");
+			fw.write("----------------------------------------------------------------------------\n\n");
 			fw.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -550,5 +617,26 @@ public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin
 		}
 		
 		return ret;
+	}
+	
+	private String readJS() {
+		InputStream is;
+		try {
+			is = getClass().getResourceAsStream("resources/serialization.js");
+			BufferedReader bf = new BufferedReader(new InputStreamReader(is));
+			String inputLine;
+			String script = "";
+	        while ((inputLine = bf.readLine()) != null) {
+	        	script = script + inputLine + "\n";
+	        }
+	        
+	        return script;
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 }
