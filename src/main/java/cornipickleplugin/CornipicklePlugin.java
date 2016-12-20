@@ -55,6 +55,8 @@ public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin
 	
 	private Interpreter m_corniInterpreter;
 	
+	private Interpreter m_initialInterpreter;
+	
 	private Set<String> m_attributes;
 	
 	private Set<String> m_tagNames;
@@ -111,6 +113,18 @@ public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin
 	@Override
 	public void onNewState(CrawlerContext context, StateVertex newState) {
 		double begin = (double)System.currentTimeMillis();
+		
+		boolean newInterpreterNeeded = false;
+		
+		try {
+			context.getCrawlPath();
+			if(context.getCrawlPath().size() == 1) {
+				this.m_corniInterpreter = this.m_initialInterpreter;
+			}
+		} catch (NullPointerException e) {
+			this.m_corniInterpreter = new Interpreter();
+			newInterpreterNeeded = true;
+		}
 		
 		String script = readJS();
 		
@@ -172,18 +186,20 @@ public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		if(newInterpreterNeeded) {
+			this.m_initialInterpreter = this.m_corniInterpreter;
+		}
 	}
 	
 	/*
-	 * Function executed everytime a state is revisited (happens when backtracking too).
+	 * Function executed everytime a state is revisited (happens when backtracking too except the first state).
 	 * @see com.crawljax.core.plugin.OnRevisitStatePlugin#onRevisitState(com.crawljax.core.CrawlerContext, com.crawljax.core.state.StateVertex)
 	 */
 	@Override
 	public void onRevisitState(CrawlerContext context, StateVertex currentState) {
-		try {
-			context.getCrawlPath();
-		} catch (NullPointerException e) {
-			this.m_corniInterpreter.resetHistory();
+		if(context.getCrawlPath().size() == 1) {
+			this.m_corniInterpreter = this.m_initialInterpreter;
 		}
 		
 		double begin = (double)System.currentTimeMillis();

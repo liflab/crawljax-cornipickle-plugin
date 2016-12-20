@@ -33,7 +33,6 @@ public class BeepStoreRunner {
 
 		builder.crawlRules().click("a");
 		builder.crawlRules().click("button");
-		builder.crawlRules().clickOnce(true).click("input").withAttribute("id", "fault-leave-login-link");
 
 		// except these
 		builder.crawlRules().dontClick("a").underXPath("//DIV[@id='guser']");
@@ -71,7 +70,9 @@ public class BeepStoreRunner {
 
 	private static InputSpecification getInputSpecification() {
 		InputSpecification input = new InputSpecification();
-		input.field("name").setValue("Crawl");
+		input.field("fault-leave-login-link").setValue(true);
+		input.field("username").setValue("user");
+		input.field("password").setValue("1234");
 		return input;
 	}
 

@@ -5,7 +5,7 @@ http://localhost/beepstore
 
 Path: index
 
-Time taken: 0.0023833333333333332 minutes 
+Time taken: 0.0022500000000000003 minutes 
 
 Statement:
 @name Menus aligned 
@@ -33,7 +33,7 @@ http://localhost/beepstore/
 
 Path: index -> state2
 
-Time taken: 9.166666666666666E-4 minutes 
+Time taken: 7.666666666666667E-4 minutes 
 
 Statement:
 @name Menus aligned 
@@ -89,7 +89,7 @@ http://localhost/beepstore/
 
 Path: index -> state4
 
-Time taken: 8.333333333333334E-4 minutes 
+Time taken: 7.0E-4 minutes 
 
 Statement:
 @name Menus aligned 
@@ -117,7 +117,7 @@ http://localhost/beepstore/
 
 Path: index -> state5
 
-Time taken: 6.833333333333333E-4 minutes 
+Time taken: 6.666666666666666E-4 minutes 
 
 Statement:
 @name Menus aligned 
@@ -145,7 +145,7 @@ http://localhost/beepstore/
 
 Path: index -> state6
 
-Time taken: 5.0E-4 minutes 
+Time taken: 7.0E-4 minutes 
 
 Statement:
 @name Menus aligned 
@@ -173,7 +173,7 @@ http://localhost/beepstore/
 
 Path: index -> state7
 
-Time taken: 6.166666666666666E-4 minutes 
+Time taken: 5.0E-4 minutes 
 
 Statement:
 @name Menus aligned 
