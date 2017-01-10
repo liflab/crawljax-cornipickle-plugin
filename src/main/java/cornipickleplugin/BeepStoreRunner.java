@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.crawljax.browser.EmbeddedBrowser.BrowserType;
+import com.crawljax.condition.VisibleCondition;
 import com.crawljax.core.CrawljaxRunner;
 import com.crawljax.core.configuration.BrowserConfiguration;
 import com.crawljax.core.configuration.CrawljaxConfiguration;
@@ -15,14 +16,15 @@ import com.crawljax.core.configuration.InputSpecification;
 import com.crawljax.core.plugin.HostInterfaceImpl;
 import com.crawljax.core.plugin.descriptor.Parameter;
 import com.crawljax.core.plugin.descriptor.PluginDescriptor;
+import com.crawljax.core.state.Identification;
 
 import ca.uqac.lif.cornipickle.CornipickleParser.ParseException;
 
 public class BeepStoreRunner {
 
 	private static final String URL = "http://localhost/beepstore";
-	private static final int MAX_DEPTH = 2;
-	private static final int MAX_NUMBER_STATES = 8;
+	private static final int MAX_DEPTH = 10;
+	private static final int MAX_NUMBER_STATES = 100;
 	private static final Logger LOG = LoggerFactory.getLogger(Runner.class);
 	
 	public static void main(String[] args) {
@@ -31,12 +33,18 @@ public class BeepStoreRunner {
 		
 		builder.setBrowserConfig(new BrowserConfiguration(BrowserType.CHROME));
 
+		VisibleCondition condahome = new VisibleCondition(new Identification(Identification.How.id, "home"));
+		VisibleCondition condwhatis = new VisibleCondition(new Identification(Identification.How.id, "what-is-the-beep-store"));
+		VisibleCondition condsignin = new VisibleCondition(new Identification(Identification.How.id, "sign-in"));
+		VisibleCondition condcontact = new VisibleCondition(new Identification(Identification.How.id, "contact-us"));
+		VisibleCondition conditemsearch = new VisibleCondition(new Identification(Identification.How.id, "item-search"));
+		VisibleCondition condcart = new VisibleCondition(new Identification(Identification.How.id, "cart-display"));
+		VisibleCondition condfaults = new VisibleCondition(new Identification(Identification.How.id, "fault-parameters"));
+		
 		builder.crawlRules().click("a");
 		builder.crawlRules().click("button");
-
-		// except these
-		builder.crawlRules().dontClick("a").underXPath("//DIV[@id='guser']");
-		builder.crawlRules().dontClick("a").withText("Language Tools");
+		builder.crawlRules().dontClick("input").when(condfaults);
+		builder.crawlRules().clickOnce(false);
 
 		// limit the crawling scope
 		builder.setMaximumStates(MAX_NUMBER_STATES);
@@ -70,7 +78,6 @@ public class BeepStoreRunner {
 
 	private static InputSpecification getInputSpecification() {
 		InputSpecification input = new InputSpecification();
-		input.field("fault-leave-login-link").setValue(true);
 		input.field("username").setValue("user");
 		input.field("password").setValue("1234");
 		return input;

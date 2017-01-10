@@ -373,7 +373,7 @@ var serializePageContents = function(n, path, event)
 	var current_path = path;
 	current_path.push(n.tagName);
 	var out = {};
-	if (includeInResult(n, path) === INCLUDE || (event && n === event.target))
+	if (includeInResult(n, path) === INCLUDE || (event && n === event))
 	{
 		if (n.tagName)
 		{
@@ -457,7 +457,9 @@ var serializePageContents = function(n, path, event)
 var target;
 if(%%BOOL%%)
 {
+	console.log("I'm in");
 	target = document.evaluate("%%PATH%%", document, null, 9, null).singleNodeValue;
+	console.log(target);
 }
 else
 {
