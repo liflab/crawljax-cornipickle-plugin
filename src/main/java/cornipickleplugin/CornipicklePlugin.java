@@ -122,7 +122,6 @@ public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin
 				this.m_corniInterpreter = this.m_initialInterpreter;
 			}
 		} catch (NullPointerException e) {
-			this.m_corniInterpreter = new Interpreter();
 			newInterpreterNeeded = true;
 		}
 		
@@ -257,7 +256,7 @@ public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin
 				fw.write("Verdict:\n" + statement.getValue().getValue().toString() + "\n\n");
 				fw.write("Witness:\n" + statement.getValue().getWitnessFalse().toString() + "\n\n");
 			}
-			fw.write("JSON: \n" + content.toString() + "\n\n");
+			//fw.write("JSON: \n" + content.toString() + "\n\n");
 			fw.write("----------------------------------------------------------------------------\n\n");
 			fw.close();
 		} catch (IOException e) {

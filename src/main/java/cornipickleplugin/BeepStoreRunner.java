@@ -23,8 +23,8 @@ import ca.uqac.lif.cornipickle.CornipickleParser.ParseException;
 public class BeepStoreRunner {
 
 	private static final String URL = "http://localhost/beepstore";
-	private static final int MAX_DEPTH = 10;
-	private static final int MAX_NUMBER_STATES = 100;
+	private static final int MAX_DEPTH = 20;
+	private static final int MAX_NUMBER_STATES = 200;
 	private static final Logger LOG = LoggerFactory.getLogger(Runner.class);
 	
 	public static void main(String[] args) {
@@ -43,8 +43,10 @@ public class BeepStoreRunner {
 		
 		builder.crawlRules().click("a");
 		builder.crawlRules().click("button");
+		builder.crawlRules().dontClick("a").withAttribute("text", "Sign out");
 		builder.crawlRules().dontClick("input").when(condfaults);
 		builder.crawlRules().clickOnce(false);
+		builder.crawlRules().dontClickChildrenOf("li");
 
 		// limit the crawling scope
 		builder.setMaximumStates(MAX_NUMBER_STATES);
@@ -55,7 +57,7 @@ public class BeepStoreRunner {
 		for(Parameter parameter : descriptor.getParameters()) {
 			if(parameter.getId().equals("properties")) {
 				//Put here the path to a .cp file containing your Cornipickle properties
-				parameters.put(parameter.getId(), "/home/fguerin/Documents/crawljax-cornipickle-plugin/properties.cp");
+				parameters.put(parameter.getId(), "/home/fguerin/Documents/crawljax-cornipickle-plugin/propertiesbug1.cp");
 			}
 			else {
 				parameters.put(parameter.getId(), "value");

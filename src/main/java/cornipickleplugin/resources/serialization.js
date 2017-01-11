@@ -247,7 +247,7 @@ var addIfDefined = function(out, property_name, property)
  */
 var matchesSelector = function(selector, n)
 {
-	var pat = new RegExp("([\\w\\d]+){0,1}(\\.([\\w\\d]+)){0,1}(#([\\w\\d]+)){0,1}");
+	var pat = new RegExp("([\\w\\d]+){0,1}(\\.([\\w\\d-]+)){0,1}(#([\\w\\d-]+)){0,1}");
 	var mat = pat.exec(selector);
 	var tag_name = mat[1];
 	var class_name = mat[3];
