@@ -20,7 +20,7 @@ import com.crawljax.core.state.Identification;
 
 import ca.uqac.lif.cornipickle.CornipickleParser.ParseException;
 
-public class BeepStoreRunner {
+public class BeepStoreRunnerBug1 {
 
 	private static final String URL = "http://localhost/beepstore";
 	private static final int MAX_DEPTH = 20;
@@ -85,7 +85,7 @@ public class BeepStoreRunner {
 		return input;
 	}
 
-	private BeepStoreRunner() {
+	private BeepStoreRunnerBug1() {
 		// Utility class
 	}
 

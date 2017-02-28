@@ -16,3 +16,6 @@ hs_err_pid*
 .classpath
 .project
 .settings/
+
+out.txt
+standardoutput.txt

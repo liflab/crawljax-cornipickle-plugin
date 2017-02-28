@@ -6,7 +6,7 @@ We say that the action band says welcome when (
 
 We say that we are in the login page when (
 	There exists $div in $(.content-div) such that (
-		( $div's id is "sign-in" )
+		( $div's class is ".sign-in" )
 		And
 		(Not ( $div's display is "none"))
 	)
@@ -17,6 +17,8 @@ We say that we are in the login page when (
   @description We can't login when we are already logged in
   @severity Warning
 """
-If ( the action band says welcome ) Then (
-	Not ( we are in the login page )
+Always (
+	If ( the action band says welcome ) Then (
+		Not ( we are in the login page )
+	)
 ).
