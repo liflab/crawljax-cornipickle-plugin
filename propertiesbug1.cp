@@ -5,10 +5,8 @@ We say that the action band says welcome when (
 ).
 
 We say that we are in the login page when (
-	There exists $div in $(.content-div) such that (
-		( $div's class is ".sign-in" )
-		And
-		(Not ( $div's display is "none"))
+	There exists $div in $(#sign-in) such that (
+		Not ( $div's display is "none")
 	)
 ).
 

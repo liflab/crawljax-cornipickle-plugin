@@ -11,6 +11,7 @@ import com.crawljax.core.state.Eventable;
 import com.crawljax.core.state.Identification;
 import com.crawljax.core.state.StateVertex;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.regex.Pattern;
@@ -24,6 +25,25 @@ public class JavaPlugin implements OnNewStatePlugin, OnRevisitStatePlugin, Gener
 	
 	private enum Verdict {TRUE, FALSE, INCONCLUSIVE};
 	private Verdict m_verdict;
+	
+	public JavaPlugin() {
+		this.m_hostInterface = new HostInterfaceImpl(null, null);
+		this.m_outputFolder = "";
+		this.m_verdict = Verdict.INCONCLUSIVE;
+	}
+	
+	public JavaPlugin(HostInterface hostInterface) {
+		this.m_hostInterface = hostInterface;
+		this.m_outputFolder = hostInterface.getOutputDirectory().getAbsolutePath();
+		this.m_verdict = Verdict.INCONCLUSIVE;
+		
+		try {
+			FileWriter fw = new FileWriter(new File(this.m_hostInterface.getOutputDirectory().getPath() + "/out.txt"), false);
+			fw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	@Override
 	public void onNewState(CrawlerContext context, StateVertex newState) {
@@ -63,25 +83,6 @@ public class JavaPlugin implements OnNewStatePlugin, OnRevisitStatePlugin, Gener
 		double difference = (end - begin);
 		
 		output(context, newState, difference);
-	}
-	
-	public JavaPlugin() {
-		this.m_hostInterface = new HostInterfaceImpl(null, null);
-		this.m_outputFolder = "";
-		this.m_verdict = Verdict.INCONCLUSIVE;
-	}
-	
-	public JavaPlugin(HostInterface hostInterface) {
-		this.m_hostInterface = hostInterface;
-		this.m_outputFolder = hostInterface.getOutputDirectory().getAbsolutePath();
-		this.m_verdict = Verdict.INCONCLUSIVE;
-		
-		try {
-			FileWriter fw = new FileWriter(hostInterface.getOutputDirectory(), false);
-			fw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	@Override
@@ -138,8 +139,8 @@ public class JavaPlugin implements OnNewStatePlugin, OnRevisitStatePlugin, Gener
 	
 	public void output(CrawlerContext context, StateVertex newState, double difference) {
 		try {
-			FileWriter fw = new FileWriter(this.m_hostInterface.getOutputDirectory(), true);
-			fw.write("<br>New State " + String.valueOf(newState.getId() + "</br>\n\n"));
+			FileWriter fw = new FileWriter(new File(this.m_hostInterface.getOutputDirectory().getPath() + "/out.txt"), true);
+			fw.write("New State " + String.valueOf(newState.getId() + "\n\n"));
 			fw.write("URL:\n" + newState.getUrl() + "\n\n");
 			fw.write("Path: " + getStatePath(context) + "\n\n");
 			fw.write("Time taken: " + String.valueOf(difference) + " milliseconds \n\n");

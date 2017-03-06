@@ -1,6 +1,7 @@
 package cornipickleplugin;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -25,6 +26,7 @@ import com.crawljax.core.state.Eventable;
 import com.crawljax.core.state.Eventable.EventType;
 import com.crawljax.core.state.Identification;
 import com.crawljax.core.state.StateVertex;
+import com.crawljax.core.plugin.Plugin;
 
 import ca.uqac.lif.cornipickle.CornipickleParser.ParseException;
 import ca.uqac.lif.cornipickle.Interpreter;
@@ -48,7 +50,7 @@ import org.slf4j.LoggerFactory;
  * @author fguerin
  *
  */
-public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin, GeneratesOutput {
+public class CornipicklePlugin implements Plugin, OnNewStatePlugin, OnRevisitStatePlugin, GeneratesOutput {
 	private HostInterface m_hostInterface;
 	
 	private String m_outputFolder;
@@ -103,7 +105,7 @@ public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin
 		}
 		
 		try {
-			FileWriter fw = new FileWriter(hostInterface.getOutputDirectory(), false);
+			FileWriter fw = new FileWriter(new File(hostInterface.getOutputDirectory().getPath() + "/out.txt"), false);
 			fw.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -162,23 +164,23 @@ public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin
 			e1.printStackTrace();
 		}
 		
-		Map<StatementMetadata, Verdict> verdicts = this.m_corniInterpreter.getVerdicts();
+		Map<StatementMetadata, ca.uqac.lif.cornipickle.Verdict> verdicts = this.m_corniInterpreter.getVerdicts();
 		
 		double end = (double)System.currentTimeMillis();
 		double difference = (end - begin);
 		
 		try {
-			FileWriter fw = new FileWriter(this.m_hostInterface.getOutputDirectory(), true);
-			fw.write("<br>New State " + String.valueOf(newState.getId() + "</br>\n\n"));
+			FileWriter fw = new FileWriter(new File(this.m_hostInterface.getOutputDirectory().getPath() + "/out.txt"), true);
+			fw.write("New State " + String.valueOf(newState.getId() + "\n\n"));
 			fw.write("URL:\n" + newState.getUrl() + "\n\n");
 			fw.write("Path: " + getStatePath(context) + "\n\n");
 			fw.write("Time taken: " + String.valueOf(difference) + " milliseconds \n\n");
-			for(Map.Entry<StatementMetadata, Verdict> statement : verdicts.entrySet()) {
+			for(Map.Entry<StatementMetadata, ca.uqac.lif.cornipickle.Verdict> statement : verdicts.entrySet()) {
 				fw.write("Statement:\n" + statement.getKey().toString() + "\n\n");
 				fw.write("Verdict:\n" + statement.getValue().getValue().toString() + "\n\n");
 				fw.write("Witness:\n" + statement.getValue().getWitnessFalse().toString() + "\n\n");
 			}
-			fw.write("JSON: \n" + content.toString() + "\n\n");
+			//fw.write("JSON: \n" + content.toString() + "\n\n");
 			fw.write("----------------------------------------------------------------------------\n\n");
 			fw.close();
 		} catch (IOException e) {
@@ -240,18 +242,18 @@ public class CornipicklePlugin implements OnNewStatePlugin, OnRevisitStatePlugin
 			e1.printStackTrace();
 		}
 		
-		Map<StatementMetadata, Verdict> verdicts = this.m_corniInterpreter.getVerdicts();
+		Map<StatementMetadata, ca.uqac.lif.cornipickle.Verdict> verdicts = this.m_corniInterpreter.getVerdicts();
 		
 		double end = (double)System.currentTimeMillis();
 		double difference = (end - begin);
 		
 		try {
-			FileWriter fw = new FileWriter(this.m_hostInterface.getOutputDirectory(), true);
-			fw.write("<br>Revisit State " + String.valueOf(currentState.getId() + "</br>\n\n"));
+			FileWriter fw = new FileWriter(new File(this.m_hostInterface.getOutputDirectory().getPath() + "/out.txt"), true);
+			fw.write("Revisit State " + String.valueOf(currentState.getId() + "\n\n"));
 			fw.write("URL:\n" + currentState.getUrl() + "\n\n");
 			fw.write("Path: " + getStatePath(context) + "\n\n");
 			fw.write("Time taken: " + String.valueOf(difference) + " milliseconds \n\n");
-			for(Map.Entry<StatementMetadata, Verdict> statement : verdicts.entrySet()) {
+			for(Map.Entry<StatementMetadata, ca.uqac.lif.cornipickle.Verdict> statement : verdicts.entrySet()) {
 				fw.write("Statement:\n" + statement.getKey().toString() + "\n\n");
 				fw.write("Verdict:\n" + statement.getValue().getValue().toString() + "\n\n");
 				fw.write("Witness:\n" + statement.getValue().getWitnessFalse().toString() + "\n\n");

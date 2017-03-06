@@ -51,7 +51,7 @@ public class BeepStoreRunnerJava {
 		PluginDescriptor descriptor = PluginDescriptor.forPlugin(JavaPlugin.class);
 		Map<String, String> parameters = new HashMap<>();
 		JavaPlugin plugin;
-		plugin = new JavaPlugin(new HostInterfaceImpl(new File("out.txt"), parameters));
+		plugin = new JavaPlugin(new HostInterfaceImpl(new File("."), parameters));
 		builder.addPlugin(plugin); 
 
 		builder.crawlRules().setInputSpec(getInputSpecification());

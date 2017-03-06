@@ -66,7 +66,7 @@ public class BeepStoreRunnerBug2 {
 		}
 		CornipicklePlugin plugin;
 		try {
-			plugin = new CornipicklePlugin(new HostInterfaceImpl(new File("out.txt"), parameters));
+			plugin = new CornipicklePlugin(new HostInterfaceImpl(new File("."), parameters));
 			builder.addPlugin(plugin); 
 
 			builder.crawlRules().setInputSpec(getInputSpecification());
