@@ -15,9 +15,50 @@
 	<name>A Crawljax plugin.</name>
 	<description>A plugin for...</description>
 	<url>http://crawljax.com</url>
+	
+	<developers>
+		<developer>
+			<id>fguerin</id>
+			<name>Francis Guérin</name>
+			<email>francis.guerin66@gmail.com</email>
+			<organization>liflab</organization>
+			<organizationUrl>http://www.uqac.ca/dim/lif/</organizationUrl>
+			<timezone>-5</timezone>
+		</developer>
+	</developers>
 
 	<properties>
 		<crawljax.version>3.6</crawljax.version>
 	</properties>
+	
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>plugin-descriptor.xml</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/java/</directory>
+				<includes>
+					<include>cornipickleplugin/resources/serialization.js</include>
+				</includes>
+			</resource>
+		</resources>
+		<pluginManagement>
+      		<plugins>
+        		<plugin>
+        			<artifactId>maven-jar-plugin</artifactId>
+        			<configuration>
+					    <excludes>
+					    	<exclude>**/cornipickleplugin/*Runner*</exclude>
+					    	<exclude>**/*JavaPlugin*</exclude>
+					    </excludes>
+					</configuration>
+        		</plugin>
+        	</plugins>
+        </pluginManagement>
+	</build>
 
 </project>
