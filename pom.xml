@@ -42,23 +42,10 @@
 			<resource>
 				<directory>src/main/java/</directory>
 				<includes>
-					<include>cornipickleplugin/resources/serialization.js</include>
+					<include>ca/uqac/lif/cornipickleplugin/resources/serialization.js</include>
 				</includes>
 			</resource>
 		</resources>
-		<pluginManagement>
-      		<plugins>
-        		<plugin>
-        			<artifactId>maven-jar-plugin</artifactId>
-        			<configuration>
-					    <excludes>
-					    	<exclude>**/cornipickleplugin/*Runner*</exclude>
-					    	<exclude>**/*JavaPlugin*</exclude>
-					    </excludes>
-					</configuration>
-        		</plugin>
-        	</plugins>
-        </pluginManagement>
 	</build>
 
 </project>

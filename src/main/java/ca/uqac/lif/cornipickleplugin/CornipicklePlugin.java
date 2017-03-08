@@ -1,4 +1,4 @@
-package cornipickleplugin;
+package ca.uqac.lif.cornipickleplugin;
 
 import java.io.BufferedReader;
 import java.io.File;
