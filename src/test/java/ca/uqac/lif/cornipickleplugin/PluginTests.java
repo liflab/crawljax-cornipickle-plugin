@@ -1,3 +1,5 @@
+package ca.uqac.lif.cornipickleplugin;
+
 import static org.junit.Assert.*;
 
 import java.io.File;
