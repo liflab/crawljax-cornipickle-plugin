@@ -29,12 +29,13 @@
 
 	<properties>
 		<crawljax.version>3.6</crawljax.version>
+		<selenium.version>3.4.0</selenium.version>
 	</properties>
 	
 	<build>
 		<resources>
 			<resource>
-				<directory>src/main/resources</directory>
+				<directory>src/main/resources/</directory>
 				<includes>
 					<include>plugin-descriptor.xml</include>
 				</includes>

@@ -270,7 +270,6 @@ public class CornipicklePlugin implements Plugin, OnNewStatePlugin, OnRevisitSta
 	/**
 	 * Function used to send the properties to the interpreter.
 	 * @param properties  a string of containing Cornipickle code
-	 * @return  true if it parsed successfully, false otherwise
 	 */
 	public void setProperties(String properties) throws ParseException {
 		this.m_corniInterpreter.clear();
