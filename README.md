@@ -46,7 +46,7 @@ Go in the "Plugins" tab and upload the plugin in the section "Add Local Plugin" 
 
 ### 5. Create a configuration
 
-Create a configuration in the Configurations tab. After saving it, go in the Plugins tab of your configuration and add the plugin. You have to put the path to your properties file in the field "Cornipickle properties".
+Create a configuration in the Configurations tab. Make sure that if you use any other browser than Firefox, you have the corresponding Driver installed. After saving it, go in the Plugins tab of your configuration and add the plugin. You have to put the path to your properties file in the field "Cornipickle properties".
 
 ### 6. Run
 

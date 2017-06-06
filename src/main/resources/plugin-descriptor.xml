@@ -12,20 +12,5 @@
 			<display-name>Cornipickle properties</display-name>
 			<type>textbox</type>
 		</parameter>
-		<parameter>
-			<id>interval</id>
-			<display-name>Resolution interval in pixels(0 for no resolution tests)</display-name>
-			<type>textbox</type>
-		</parameter>
-		<parameter>
-			<id>initialWidth</id>
-			<display-name>Initial width in pixels</display-name>
-			<type>textbox</type>
-		</parameter>
-		<parameter>
-			<id>finalWidth</id>
-			<display-name>Final width in pixels</display-name>
-			<type>textbox</type>
-		</parameter>
 	</parameters>
 </plugin-descriptor>
