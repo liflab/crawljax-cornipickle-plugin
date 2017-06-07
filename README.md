@@ -28,7 +28,7 @@ mvn clean install
 
 Create a .cp file with your properties following Cornipickle's syntax.
 
-###2. Launch the Crawljax web distribution
+### 2. Launch the Crawljax web distribution
 
 If the Crawljax web distribution is not already running (from the installation steps), run it. 
 
