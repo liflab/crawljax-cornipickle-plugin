@@ -15,13 +15,6 @@ var m_tagsToInclude = [%%TAGLIST%%];
 var INCLUDE = 0;
 var DONT_INCLUDE = 1;
 var DONT_INCLUDE_RECURSIVE = 2;
-/**
- * A global counter to give a unique ID to every element
- * encountered and reported back to the server
- */
-var elementCounter = 0;
-
-var m_idMap = {};
 
 var remove_units = function(s)
 {
@@ -71,6 +64,10 @@ var get_class_list = function(element)
 var cumulativeOffset = function(element)
 {
 	var top = 0, left = 0;
+	if(element.classList.contains("nav-menu"))
+	{
+		console.log(element.offsetTop);
+	}
 	do
 	{
 		top += element.offsetTop  || 0;
@@ -218,12 +215,18 @@ var registerNewElement = function(n)
 	{
 		return;
 	}
-	n.cornipickleid = elementCounter;
-	m_idMap[elementCounter] = {
+	var currentId = parseInt(window.sessionStorage.getItem("interpreterElementCounter"));
+	if(!currentId)
+	{
+		window.sessionStorage.setItem("interpreterElementCounter", 0);
+		currentId = 0;
+	}
+	n.cornipickleid = currentId;
+	window.m_idMap[currentId] = {
 		"element" : n,
 		"style" : {}
 	};
-	elementCounter++;
+	window.sessionStorage.setItem("interpreterElementCounter", currentId + 1);
 };
 
 
@@ -281,6 +284,18 @@ var matchesSelector = function(selector, n)
 	return true;
 };
 
+var checkIfDirectChildIsTextNode = function(n)
+{
+    for(var i = 0; i < n.childNodes.length; i++)
+    {
+        if(!n.childNodes[i].tagName)
+        {
+            return INCLUDE;
+        }
+    }
+    return DONT_INCLUDE;
+};
+
 var includeInResult = function(n, path)
 {
 	var classlist = get_class_list(n);
@@ -293,7 +308,7 @@ var includeInResult = function(n, path)
 	}
 	if (!n.tagName) // This is a text node
 	{
-		if (n.nodeValue.trim() === "")
+		if (n.nodeValue.trim() === "" || n.nodeType == 8) //8 is a comment node
 		{
 			// Don't include nodes containing only whitespace
 			return DONT_INCLUDE_RECURSIVE;
@@ -303,6 +318,10 @@ var includeInResult = function(n, path)
 			return INCLUDE;
 		}
 	}
+	if(n.tagName.toLowerCase() === "svg" || n.tagName.toLowerCase() === "script")
+	{
+		return DONT_INCLUDE_RECURSIVE;
+	}
 	for (var i = 0; i < m_tagsToInclude.length; i++)
 	{
 		var part = m_tagsToInclude[i];
@@ -310,6 +329,14 @@ var includeInResult = function(n, path)
 		{
 			return INCLUDE;
 		}
+	        else if(this.m_tagsToInclude[i] == "CDATA")
+	        {
+                return checkIfDirectChildIsTextNode(n);
+	        }
+	        else if(part == "*")
+	        {
+                return INCLUDE;
+	        }
 	}
 	return DONT_INCLUDE;
 };
@@ -338,7 +365,7 @@ var serializeMediaQueries = function()
 		}
 	}
 	return out;
-}
+};
 
 var serializeWindow = function(page_contents)
 {
@@ -349,6 +376,8 @@ var serializeWindow = function(page_contents)
 		"orientation" : get_orientation(),
 		"width" : window.document.documentElement.clientWidth,
 		"height" : window.document.documentElement.clientHeight,
+        "scroll-width" : window.document.documentElement.scrollWidth,
+        "scroll-height" : window.document.documentElement.scrollHeight,
 		"device-width" : window.screen.availWidth,
 		"device-height" : window.screen.availHeight,
 		"device-aspect-ratio" : window.screen.availWidth / window.screen.availHeight,
@@ -429,8 +458,10 @@ var serializePageContents = function(n, path, event)
 		}
 		else
 		{
+            registerNewElement(n.parentElement);
 			out.tagname = "CDATA";
 			out.text = n.nodeValue;
+            out.cornipickleid = n.parentElement.cornipickleid;
 			return out;
 		}
 	}
@@ -464,6 +495,11 @@ if(%%BOOL%%)
 else
 {
 	target = undefined;
+}
+
+if(!(window.m_idMap))
+{
+	window.m_idMap = {};
 }
 
 var json = serializePageContents(document.body, [], target);
